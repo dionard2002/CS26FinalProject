@@ -381,12 +381,17 @@ public class MainDashboard {
                 
                 // Validate input before proceeding
                 if (!taskName.isEmpty() && !description.isEmpty() && !dueDate.isEmpty()) {
-                    // Add task to database
-                    addTaskToDatabase(listID, taskName, description, dueDate, priority);
-                    addTaskToColumn(taskPanel, taskName);
+                    if (isValidDate(dueDate)) {
+                        // Add task to database
+                        addTaskToDatabase(listID, taskName, description, dueDate, priority);
+                        addTaskToColumn(taskPanel, taskName);
+                    } else {
+                        JOptionPane.showMessageDialog(kanbanContent, "Please enter a valid date in the format YYYY-MM-DD.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                    }
                 } else {
                     JOptionPane.showMessageDialog(kanbanContent, "All fields are required.", "Input Error", JOptionPane.ERROR_MESSAGE);
                 }
+
             }
         });
         buttonPanel.add(addTaskButton); // Add to button panel
@@ -398,7 +403,18 @@ public class MainDashboard {
         kanbanContent.revalidate();
         kanbanContent.repaint();
     }
-    
+    private boolean isValidDate(String date) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormat.setLenient(false); // Strict parsing to prevent invalid dates like 2024-02-30
+        
+        try {
+            dateFormat.parse(date); // Try parsing the input string
+            return true; // If parsing succeeds, it's a valid date
+        } catch (Exception e) {
+            return false; // If parsing fails, the date is invalid
+        }
+    }
+
     private void addTaskToDatabase(int listID, String taskName, String description, String dueDate, String priority) {
         try (Connection connection = DatabaseConnector.getConnection();
                 PreparedStatement stmt = connection.prepareStatement(
@@ -412,7 +428,7 @@ public class MainDashboard {
             stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Failed to add task to database.");
+            JOptionPane.showMessageDialog(null, "Invalid input. Please try again.");
         }
     }
     
@@ -607,7 +623,7 @@ public class MainDashboard {
             stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Failed to delete project from the database.");
+            JOptionPane.showMessageDialog(null, "Delete all contents of the project first.");
         }
     }
     
